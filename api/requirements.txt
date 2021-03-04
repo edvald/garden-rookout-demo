@@ -3,3 +3,4 @@ Redis
 gunicorn
 flask-cors
 requests
+rook

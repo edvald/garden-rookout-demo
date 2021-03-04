@@ -2,6 +2,8 @@ kind: Module
 description: The worker that collects votes and stores results in a postgres table
 type: container
 name: worker
+build:
+  targetImage: dev
 services:
   - name: worker
     dependencies:
@@ -11,3 +13,5 @@ services:
       PGDATABASE: ${var.postgres-database}
       PGUSER: ${var.postgres-username}
       PGPASSWORD: ${var.postgres-password}
+      JAVA_TOOL_OPTIONS: "-javaagent:/app/rook.jar -DROOKOUT_TOKEN=${var.rookoutToken}"
+      ROOKOUT_LABELS: "env:dev,service:worker"

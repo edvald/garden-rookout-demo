@@ -4,6 +4,8 @@ FROM python:2.7-alpine
 # Set the application directory
 WORKDIR /app
 
+RUN apk add --no-cache g++ python-dev linux-headers
+
 # Install our requirements.txt
 ADD requirements.txt /app/requirements.txt
 RUN pip install -r requirements.txt

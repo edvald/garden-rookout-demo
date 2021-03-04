@@ -4,7 +4,7 @@ type: container
 name: api
 services:
   - name: api
-    args: [python, app.py]
+    command: [python, app.py]
     ports:
       - name: http
         protocol: TCP
@@ -19,6 +19,8 @@ services:
         port: http
     dependencies:
       - redis
+    env:
+      ROOKOUT_TOKEN: ${var.rookoutToken}
 tests:
   - name: unit
     args: [echo, ok]
@@ -27,3 +29,5 @@ tests:
     timeout: 60
     dependencies:
       - api
+    env:
+      ROOKOUT_TOKEN: ${var.rookoutToken}

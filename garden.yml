@@ -31,3 +31,4 @@ variables:
   # Only use for testing!
   postgres-username: postgres
   postgres-password: test-password
+  rookoutToken: 5135700ebafd042419219a66ac1d6382cb3491267e3cd6307f2041679fd874f3

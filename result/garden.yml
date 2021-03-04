@@ -19,6 +19,7 @@ services:
       PGDATABASE: ${var.postgres-database}
       PGUSER: ${var.postgres-username}
       PGPASSWORD: ${var.postgres-password}
+      ROOKOUT_TOKEN: ${var.rookoutToken}
 tests:
   - name: integ
     args: [echo, ok]

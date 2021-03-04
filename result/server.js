@@ -7,20 +7,62 @@ const express = require('express'),
   app = express(),
   server = require('http').Server(app)
 
+/* Set up Rookout for debugging */
+const rookoutToken = process.env.ROOKOUT_TOKEN
+
+if (rookoutToken) {
+  const rookout = require('rookout')
+
+  rookout.start({
+    token: rookoutToken,
+    labels: {
+      env: 'dev',
+      service: 'result',
+    }
+  })
+}
+
+const port = process.env.PORT || 4000
+
+// Set up socket.io connection handler
 const io = require('socket.io')(server, {
   transports: ["polling"],
 })
 
-const rookout = require('rookout')
+io.on('connection', (socket) => {
+  socket.emit('message', { text: 'Welcome!' })
 
-rookout.start({
-    token: '5135700ebafd042419219a66ac1d6382cb3491267e3cd6307f2041679fd874f3',
-    labels: {
-      env: 'dev'
-    }
+  socket.on('subscribe', function (data) {
+    socket.join(data.channel)
+  })
 })
 
-const port = process.env.PORT || 4000
+// Start server
+app.use(cookieParser())
+app.use(bodyParser())
+app.use(methodOverride('X-HTTP-Method-Override'))
+app.use(function (req, res, next) {
+  res.header("Access-Control-Allow-Origin", "*")
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept")
+  res.header("Access-Control-Allow-Methods", "PUT, GET, POST, DELETE, OPTIONS")
+  next()
+})
+
+app.use(express.static('views'))
+
+app.get('/', function (req, res) {
+  res.sendFile(path.resolve(__dirname + '/views/index.html'))
+})
+
+startLoop().catch((err) => {
+  console.log("Error in db polling loop: " + err.message)
+})
+
+server.listen(port, function () {
+  const port = server.address().port
+  console.log('App running on port ' + port)
+})
+
 
 let _client
 
@@ -63,13 +105,7 @@ async function sleep(msec) {
   return new Promise((resolve) => setTimeout(resolve, msec))
 }
 
-let running = false
-
 async function startLoop() {
-  if (running) {
-    return
-  }
-
   const client = await getDb()
 
   while (true) {
@@ -93,38 +129,3 @@ function collectVotesFromResult(result) {
 
   return votes
 }
-
-// Set up socket.io connection handler
-io.on('connection', (socket) => {
-  socket.emit('message', { text: 'Welcome!' })
-
-  socket.on('subscribe', function (data) {
-    socket.join(data.channel)
-  })
-})
-
-// Start server
-app.use(cookieParser())
-app.use(bodyParser())
-app.use(methodOverride('X-HTTP-Method-Override'))
-app.use(function (req, res, next) {
-  res.header("Access-Control-Allow-Origin", "*")
-  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept")
-  res.header("Access-Control-Allow-Methods", "PUT, GET, POST, DELETE, OPTIONS")
-  next()
-})
-
-app.use(express.static('views'))
-
-app.get('/', function (req, res) {
-  res.sendFile(path.resolve(__dirname + '/views/index.html'))
-})
-
-startLoop().catch((err) => {
-  console.log("Error in db polling loop: " + err.message)
-})
-
-server.listen(port, function () {
-  const port = server.address().port
-  console.log('App running on port ' + port)
-})
