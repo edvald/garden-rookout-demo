@@ -1,5 +1,6 @@
 kind: Project
 name: vote-rookout
+defaultEnvironment: remote
 environments:
   - name: local
     variables:
