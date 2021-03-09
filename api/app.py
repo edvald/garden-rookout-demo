@@ -12,6 +12,7 @@ option_b = os.getenv('OPTION_B', "Dogs")
 hostname = socket.gethostname()
 
 rookout_token = os.getenv('ROOKOUT_TOKEN')
+instance_id = hex(random.getrandbits(64))[2:-1]
 
 app = Flask(__name__)
 CORS(app)
@@ -56,6 +57,9 @@ def vote():
 
 if __name__ == "__main__":
     if rookout_token:
-        rook.start(token=rookout_token, labels={ "env": "dev", "service": "api" }, fork=True)
+        rook.start(
+            token=rookout_token,
+            labels={ "env": "dev", "service": "api", "instance_id": instance_id },
+        )
 
     app.run(host='0.0.0.0', port=80, debug=True, threaded=True)
