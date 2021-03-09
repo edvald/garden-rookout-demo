@@ -8,7 +8,8 @@ services:
     ports:
       - name: http
         protocol: TCP
-        containerPort: 80
+        containerPort: 8080
+        servicePort: 80
     healthCheck:
       httpGet:
         path: /api

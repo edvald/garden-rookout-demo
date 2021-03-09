@@ -62,4 +62,4 @@ if __name__ == "__main__":
             labels={ "env": "dev", "service": "api", "instance_id": instance_id },
         )
 
-    app.run(host='0.0.0.0', port=80, debug=True, threaded=True)
+    app.run(host='0.0.0.0', port=8080, debug=True, threaded=True)
