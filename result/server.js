@@ -37,33 +37,6 @@ io.on('connection', (socket) => {
   })
 })
 
-// Start server
-app.use(cookieParser())
-app.use(bodyParser())
-app.use(methodOverride('X-HTTP-Method-Override'))
-app.use(function (req, res, next) {
-  res.header("Access-Control-Allow-Origin", "*")
-  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept")
-  res.header("Access-Control-Allow-Methods", "PUT, GET, POST, DELETE, OPTIONS")
-  next()
-})
-
-app.use(express.static('views'))
-
-app.get('/', function (req, res) {
-  res.sendFile(path.resolve(__dirname + '/views/index.html'))
-})
-
-startLoop().catch((err) => {
-  console.log("Error in db polling loop: " + err.message)
-})
-
-server.listen(port, function () {
-  const port = server.address().port
-  console.log('App running on port ' + port)
-})
-
-
 let _client
 
 async function getDb() {
@@ -106,18 +79,21 @@ async function sleep(msec) {
 }
 
 async function startLoop() {
-  const client = await getDb()
-
   while (true) {
     try {
-      const result = await client.query('SELECT vote, COUNT(id) AS count FROM votes GROUP BY vote', [])
-      const votes = collectVotesFromResult(result)
-      io.emit("scores", JSON.stringify(votes))
+      await emitScores()
     } catch (err) {
       console.error("Error performing query: " + err)
     }
-    await sleep(1000)
+    await sleep(3000)
   }
+}
+
+async function emitScores() {
+  const client = await getDb()
+  const result = await client.query('SELECT vote, COUNT(id) AS count FROM votes GROUP BY vote', [])
+  const votes = collectVotesFromResult(result)
+  io.emit("scores", JSON.stringify(votes))
 }
 
 function collectVotesFromResult(result) {
@@ -128,4 +104,30 @@ function collectVotesFromResult(result) {
   })
 
   return votes
+}
+
+if (require.main === module) {
+  startLoop()
+
+  // Start server
+  app.use(cookieParser())
+  app.use(bodyParser())
+  app.use(methodOverride('X-HTTP-Method-Override'))
+  app.use(function (req, res, next) {
+    res.header("Access-Control-Allow-Origin", "*")
+    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept")
+    res.header("Access-Control-Allow-Methods", "PUT, GET, POST, DELETE, OPTIONS")
+    next()
+  })
+
+  app.use(express.static('views'))
+
+  app.get('/', function (_, res) {
+    res.sendFile(path.resolve(__dirname + '/views/index.html'))
+  })
+
+  server.listen(port, function () {
+    const port = server.address().port
+    console.log('App running on port ' + port)
+  })
 }
