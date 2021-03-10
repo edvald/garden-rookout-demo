@@ -9,10 +9,10 @@ services:
       - db-init
     ingresses:
       - path: /
-        port: ui
+        port: http
         hostname: result.${var.baseHostname}
     ports:
-      - name: ui
+      - name: http
         protocol: TCP
         containerPort: 8080
         servicePort: 80
@@ -23,5 +23,14 @@ services:
       ROOKOUT_TOKEN: ${var.rookoutToken}
 tests:
   - name: integ
-    args: [echo, ok]
-    dependencies: [db-init]
+    args: [npm, run, test:integ]
+    timeout: 30
+    dependencies:
+      - result
+      - api
+      - vote
+      - worker
+    env:
+      PGDATABASE: ${var.postgres-database}
+      PGUSER: ${var.postgres-username}
+      PGPASSWORD: ${var.postgres-password}

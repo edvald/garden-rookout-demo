@@ -1,10 +1,7 @@
 var app = angular.module('catsvsdogs', []);
 var socket = io.connect({
   transports:['polling'],
-  // path: "/result/views/socket.io",
 });
-// https://vote.local.app.garden/socket.io/?EIO=3&transport=polling&t=1544105126936-2
-// https://vote.local.app.garden/result/views/socket.io/?EIO=3&transport=polling&t=1544104159102-166
 
 var bg1 = document.getElementById('background-stats-1');
 var bg2 = document.getElementById('background-stats-2');

@@ -1,41 +1,10 @@
-const express = require('express'),
-  path = require("path"),
-  pg = require("pg"),
-  cookieParser = require('cookie-parser'),
-  bodyParser = require('body-parser'),
-  methodOverride = require('method-override'),
-  app = express(),
-  server = require('http').Server(app)
+const express = require('express')
+const path = require("path")
+const pg = require("pg")
+const methodOverride = require('method-override')
 
-/* Set up Rookout for debugging */
 const rookoutToken = process.env.ROOKOUT_TOKEN
-
-if (rookoutToken) {
-  const rookout = require('rookout')
-
-  rookout.start({
-    token: rookoutToken,
-    labels: {
-      env: 'dev',
-      service: 'result',
-    }
-  })
-}
-
-const port = process.env.PORT || 4000
-
-// Set up socket.io connection handler
-const io = require('socket.io')(server, {
-  transports: ["polling"],
-})
-
-io.on('connection', (socket) => {
-  socket.emit('message', { text: 'Welcome!' })
-
-  socket.on('subscribe', function (data) {
-    socket.join(data.channel)
-  })
-})
+const port = process.env.PORT || 8080
 
 let _client
 
@@ -78,10 +47,10 @@ async function sleep(msec) {
   return new Promise((resolve) => setTimeout(resolve, msec))
 }
 
-async function startLoop() {
+async function startLoop(io) {
   while (true) {
     try {
-      await emitScores()
+      await emitScores(io)
     } catch (err) {
       console.error("Error performing query: " + err)
     }
@@ -89,7 +58,7 @@ async function startLoop() {
   }
 }
 
-async function emitScores() {
+async function emitScores(io) {
   const client = await getDb()
   const result = await client.query('SELECT vote, COUNT(id) AS count FROM votes GROUP BY vote', [])
   const votes = collectVotesFromResult(result)
@@ -106,14 +75,12 @@ function collectVotesFromResult(result) {
   return votes
 }
 
-if (require.main === module) {
-  startLoop()
+function getApp() {
+  const app = express()
+  const server = require('http').Server(app)
 
-  // Start server
-  app.use(cookieParser())
-  app.use(bodyParser())
   app.use(methodOverride('X-HTTP-Method-Override'))
-  app.use(function (req, res, next) {
+  app.use(function (_, res, next) {
     res.header("Access-Control-Allow-Origin", "*")
     res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept")
     res.header("Access-Control-Allow-Methods", "PUT, GET, POST, DELETE, OPTIONS")
@@ -126,6 +93,50 @@ if (require.main === module) {
     res.sendFile(path.resolve(__dirname + '/views/index.html'))
   })
 
+  // Set up socket.io connection handler
+  const io = require('socket.io')(server, {
+    transports: ["polling"],
+  })
+
+  io.on('connection', (socket) => {
+    socket.emit('message', { text: 'Welcome!' })
+
+    socket.on('subscribe', function (data) {
+      socket.join(data.channel)
+    })
+  })
+
+  return { app, io, server }
+}
+
+module.exports = {
+  getApp,
+  emitScores,
+}
+
+/**
+ * MAIN APP
+ */
+if (require.main === module) {
+  /* Set up Rookout for debugging */
+  if (rookoutToken) {
+    const rookout = require('rookout')
+
+    rookout.start({
+      token: rookoutToken,
+      labels: {
+        env: 'dev',
+        service: 'result',
+      }
+    })
+  }
+
+  const { server, io } = getApp()
+
+  /* Start the db polling loop */
+  startLoop(io)
+
+  /* Start the server */
   server.listen(port, function () {
     const port = server.address().port
     console.log('App running on port ' + port)
