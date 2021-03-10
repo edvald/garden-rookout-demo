@@ -25,12 +25,18 @@ class Worker {
 
   static void getVoteFromQueue(Connection dbConn, Jedis redis) throws SQLException {
     String voteJSON = redis.blpop(0, "votes").get(1);
-    JSONObject voteData = new JSONObject(voteJSON);
-    String voterID = voteData.getString("voter_id");
-    String vote = voteData.getString("vote");
 
-    System.err.printf("Processing vote for '%s' by '%s'\n", vote, voterID);
-    updateVote(dbConn, voterID, vote);
+    try {
+      JSONObject voteData = new JSONObject(voteJSON);
+      String voterID = voteData.getString("voter_id");
+      String vote = voteData.getString("vote");
+
+      System.err.printf("Processing vote for '%s' by '%s'\n", vote, voterID);
+      updateVote(dbConn, voterID, vote);
+    } catch (Exception e) {
+      System.err.printf("Error when processing vote from queue");
+      return;
+    }
   }
 
   static void updateVote(Connection dbConn, String voterID, String vote) throws SQLException {
