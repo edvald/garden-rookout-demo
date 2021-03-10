@@ -39,7 +39,7 @@ def vote():
     if request.method == 'POST':
         redis = get_redis()
         vote = request.form['vote']
-        data = json.dumps({'voter_id': voter_id, 'vote': vote})
+        data = json.dumps({'voterId': voter_id, 'vote': vote})
 
         redis.rpush('votes', data)
         print("Registered vote")
