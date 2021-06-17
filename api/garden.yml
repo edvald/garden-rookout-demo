@@ -4,16 +4,20 @@ type: container
 name: api
 services:
   - name: api
-    command: [python, /app/app.py]
+    # command: [python, /app/app.py]
+    command: ["/bin/sh", "-c", "ls /app/app.py | entr -r python /app/app.py"]
     ports:
       - name: http
         protocol: TCP
         containerPort: 8080
         servicePort: 80
-    healthCheck:
-      httpGet:
-        path: /api
-        port: http
+    devMode:
+      sync:
+        - target: /app
+    # healthCheck:
+    #   httpGet:
+    #     path: /api
+    #     port: http
     ingresses:
       - path: /
         hostname: "api.${var.baseHostname}"

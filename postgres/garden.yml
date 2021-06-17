@@ -15,8 +15,9 @@ services:
       POSTGRES_DATABASE: ${var.postgres-database}
       POSTGRES_USERNAME: ${var.postgres-username}
       POSTGRES_PASSWORD: ${var.postgres-password}
-    healthCheck:
-      command: [psql, -w, -U, "${var.postgres-username}", -d, "${var.postgres-database}", -c, "SELECT 1"]
+    args: ["postgres", "-c", "log_statement=all"]
+    # healthCheck:
+      # command: [psql, -w, -U, "${var.postgres-username}", -d, "${var.postgres-database}", -c, "SELECT 1"]
 tasks:
   - name: db-init
     command: [/bin/sh, -c]

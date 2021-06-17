@@ -5,6 +5,9 @@ name: result
 services:
   - name: result
     args: [nodemon, server.js]
+    devMode:
+      sync:
+        - target: /app
     dependencies:
       - db-init
     ingresses:

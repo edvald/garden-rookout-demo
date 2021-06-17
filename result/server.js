@@ -8,6 +8,8 @@ const port = process.env.PORT || 8080
 
 let _client
 
+let cachedVotes = JSON.stringify({});
+
 async function getDb() {
   if (_client) {
     return _client
@@ -61,8 +63,12 @@ async function startLoop(io) {
 async function emitScores(io) {
   const client = await getDb()
   const result = await client.query('SELECT vote, COUNT(id) AS count FROM votes GROUP BY vote', [])
-  const votes = collectVotesFromResult(result)
-  io.emit("scores", JSON.stringify(votes))
+  const votes = JSON.stringify(collectVotesFromResult(result))
+  if (votes !== cachedVotes) {
+    console.log("Got updated vote results", votes)
+    cachedVotes = votes
+  }
+  io.emit("scores", votes)
 }
 
 function collectVotesFromResult(result) {
