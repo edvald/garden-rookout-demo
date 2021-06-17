@@ -31,7 +31,6 @@ def hello():
 
 @app.route("/api/vote", methods=['POST','GET'])
 def vote():
-    app.logger.info("received request")
 
     voter_id = hex(random.getrandbits(64))[2:-1]
     vote = None
@@ -40,6 +39,7 @@ def vote():
         redis = get_redis()
         vote = request.form['vote']
         data = json.dumps({'voterId': voter_id, 'vote': vote})
+        app.logger.info("received request - voter id: %s, vote: %s", voter_id, vote)
 
         redis.rpush('votes', data)
         print("Registered vote")

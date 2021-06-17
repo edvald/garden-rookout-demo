@@ -10,10 +10,10 @@ services:
         protocol: TCP
         containerPort: 8080
         servicePort: 80
-    healthCheck:
-      httpGet:
-        path: /api
-        port: http
+    # healthCheck:
+    #   httpGet:
+    #     path: /api
+    #     port: http
     ingresses:
       - path: /
         hostname: "api.${var.baseHostname}"
