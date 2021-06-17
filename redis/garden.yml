@@ -5,6 +5,8 @@ name: redis
 image: redis:alpine
 services:
   - name: redis
+    command: [/bin/sh, -c]
+    args: ["redis-server"]
     ports:
       - name: redis
         protocol: TCP

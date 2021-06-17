@@ -31,7 +31,6 @@ def hello():
 
 @app.route("/api/vote", methods=['POST','GET'])
 def vote():
-    app.logger.info("received request")
 
     voter_id = hex(random.getrandbits(64))[2:-1]
     vote = None
@@ -39,16 +38,18 @@ def vote():
     if request.method == 'POST':
         redis = get_redis()
         vote = request.form['vote']
-        data = json.dumps({'voterId': voter_id, 'vote': vote})
+        data = json.dumps({'voter_id': voter_id, 'vote': vote})
+        app.logger.info("received vote request for '%s' from voter id: '%s'", vote, voter_id)
 
         redis.rpush('votes', data)
-        print("Registered vote")
+        app.logger.info("registered vote")
         return app.response_class(
             response=json.dumps(data),
             status=200,
             mimetype='application/json'
         )
     else:
+        app.logger.info("received invalid request")
         return app.response_class(
             response=json.dumps({}),
             status=404,
